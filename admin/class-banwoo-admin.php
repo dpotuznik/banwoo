@@ -99,32 +99,31 @@ class Banwoo_Admin {
 		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/banwoo-admin.js', array( 'jquery' ), $this->version, false );
 
 	}
-	/**
-	 * Register the JavaScript for the admin area.
+	/*
+	 * Initialize the class and set its properties.
 	 *
 	 * @since    1.0.0
-	 */
+	 * @param      string    $product_data_tabs       List of all tabs.
+	 * */
 	public function add_my_custom_product_data_tab( $product_data_tabs )  {
 			// First Register the Tab by hooking into the 'woocommerce_product_data_tabs' filter
 			//add_filter( 'woocommerce_product_data_tabs', 'add_my_custom_product_data_tab' );
-			$product_data_tabs['my-custom-tab'] = array(
-				'label' => __( 'My Custom Tab', 'my_text_domain' ),
-				'target' => 'my_custom_product_data',
+			$product_data_tabs['banggood'] = array(
+				'label' => __( 'Banggood', 'woocommerce' ),
+				'target' => 'banwoo_product_data',
 			);
 			return $product_data_tabs;
 		}
 
-// Next provide the corresponding tab content by hooking into the 'woocommerce_product_data_panels' action hook
-// See https://github.com/woothemes/woocommerce/blob/master/includes/admin/meta-boxes/class-wc-meta-box-product-data.php
-// for more examples of tab content
-// See https://github.com/woothemes/woocommerce/blob/master/includes/admin/wc-meta-box-functions.php for other built-in
-// functions you can call to output text boxes, select boxes, etc.
-		//add_action( 'woocommerce_product_data_panels', 'add_my_custom_product_data_fields' );
+	// Next provide the corresponding tab content by hooking into the 'woocommerce_product_data_panels' action hook
+	// See https://github.com/woothemes/woocommerce/blob/master/includes/admin/meta-boxes/class-wc-meta-box-product-data.php
+
+	// ajoute un url qui permet de stocker l'url du produit
 	public	function add_my_custom_product_data_fields() {
 			global $woocommerce, $post;
 			?>
 			<!-- id below must match target registered in above add_my_custom_product_data_tab function -->
-			<div id="my_custom_product_data" class="panel woocommerce_options_panel">
+			<div id="banwoo_product_data" class="panel woocommerce_options_panel">
 				<?php
 				woocommerce_wp_text_input(
 					array(
@@ -140,7 +139,7 @@ class Banwoo_Admin {
 			<?php
 		}
 
-	// on save le panneaux
+	// on save le l'url banggood dans la base de donnee
 	public function woo_add_custom_general_fields_save( $post_id ){
 
 		// Text Field
