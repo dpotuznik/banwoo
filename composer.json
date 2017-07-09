@@ -1,0 +1,16 @@
+{
+  "name": "dpotuznik/banwoo",
+  "description": "plugins to import banggood",
+  "minimum-stability": "stable",
+  "license": "proprietary",
+  "authors": [
+    {
+      "name": "daniel potuznik",
+      "email": "osf@dpotuznik.com"
+    }
+  ],
+  "require": {
+    "automattic/woocommerce": "1.3.0",
+    "comodojo/zip": "2.1.0"
+  }
+}

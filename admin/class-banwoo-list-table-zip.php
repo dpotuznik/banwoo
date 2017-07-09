@@ -87,7 +87,27 @@ class Banwoo_list_zip extends WP_List_Table {
      *
      * @var array
      **************************************************************************/
-    var $example_data = array(
+	private $zipFolder;
+	private $zipFiles;
+
+	public function get_list_zip_files() {
+		$arr = array();
+		$directory =  $this->zipFolder;
+		$files = array_diff(scandir($directory), array('..', '.'));
+		$id = 1;
+		foreach ($files as $file){
+			$arr[$id]=array(
+				'ID'        => $id,
+				'title'     => $file ,
+				'nbr_product'    => ''
+			);
+			$id++;
+		}
+		return $arr;
+	}
+
+/*
+    var $listZipFiles = array(
             array(
                 'ID'        => 1,
                 'title'     => '300',
@@ -137,7 +157,7 @@ class Banwoo_list_zip extends WP_List_Table {
                 'director'  => 'Stanley Kubrick'
             ),
         );
-
+*/
 
     /** ************************************************************************
      * REQUIRED. Set up a constructor that references the parent constructor. We
@@ -153,6 +173,8 @@ class Banwoo_list_zip extends WP_List_Table {
             'ajax'      => false        //does this table support ajax?
         ) );
 
+	    $this->zipFolder =  plugin_dir_path( __FILE__ ) .'../banggood_zip';
+	    $this->zipFiles = $this->get_list_zip_files();
     }
 
 
@@ -180,7 +202,6 @@ class Banwoo_list_zip extends WP_List_Table {
     function column_default($item, $column_name){
         switch($column_name){
             case 'nbr_product':
-            case 'director':
                 return $item[$column_name];
             default:
                 return print_r($item,true); //Show the whole array for troubleshooting purposes
@@ -207,10 +228,13 @@ class Banwoo_list_zip extends WP_List_Table {
      **************************************************************************/
     function column_title($item){
 
+	    // create a nonce
+	    $captcha = wp_create_nonce( 'banwoo_protect' );
+
         //Build row actions
         $actions = array(
-            'process'      => sprintf('<a href="?page=%s&action=%s&movie=%s">Edit</a>',$_REQUEST['page'],'process',$item['ID']),
-            'delete'    => sprintf('<a href="?page=%s&action=%s&movie=%s">Delete</a>',$_REQUEST['page'],'delete',$item['ID']),
+            'proccess'      => sprintf('<a href="?page=%s&action=%s&id=%s&captcha=%s">Proccess</a>',$_REQUEST['page'],'proccess',$item['ID'],$captcha),
+            'delete'    => sprintf('<a href="?page=%s&action=%s&id=%s&captcha=%s">Delete</a>',$_REQUEST['page'],'delete',$item['ID'],$captcha),
         );
 
         //Return the title contents
@@ -234,7 +258,7 @@ class Banwoo_list_zip extends WP_List_Table {
     function column_cb($item){
         return sprintf(
             '<input type="checkbox" name="%1$s[]" value="%2$s" />',
-            /*$1%s*/ $this->_args['singular'],  //Let's simply repurpose the table's singular label ("movie")
+            /*$1%s*/ 'bulk-list',  //Let's simply repurpose the table's singular label ("movie")
             /*$2%s*/ $item['ID']                //The value of the checkbox should be the record's id
         );
     }
@@ -255,8 +279,8 @@ class Banwoo_list_zip extends WP_List_Table {
      **************************************************************************/
     function get_bulk_actions() {
         $actions = array(
-            'delete'    => 'Delete',
-            'proccess'    => 'Proccess'
+            'bulk-delete'    => 'Delete',
+            'bulk-proccess'    => 'Proccess'
         );
         return $actions;
     }
@@ -322,7 +346,7 @@ class Banwoo_list_zip extends WP_List_Table {
          * use sort and pagination data to build a custom query instead, as you'll
          * be able to use your precisely-queried data immediately.
          */
-        $data = $this->example_data;
+        $data = $this->zipFiles;
 
 
         /**
@@ -453,7 +477,20 @@ class Banwoo_list_zip extends WP_List_Table {
 
         //Detect when a bulk action is being triggered...
         if( 'delete'===$this->current_action() ) {
-            wp_die('Items deleted (or they would be if we had items to delete)!');
+	        // In our file that handles the request, verify the nonce.
+	        $nonce = esc_attr( $_REQUEST['captcha'] );
+
+	        if ( ! wp_verify_nonce( $nonce, 'banwoo_protect' ) ) {
+		        die( 'Go get a life script kiddies' );
+	        }
+	        else {
+		        $this->delete_zip( absint( $_GET['id'] ) );
+		       // wp_die('Items deleted (or they would be if we had items to delete)!');
+		        wp_redirect( esc_url( add_query_arg() ) );
+		        exit;
+	        }
+
+
         }
 
         //Detect when a bulk action is being triggered...
@@ -461,5 +498,32 @@ class Banwoo_list_zip extends WP_List_Table {
             wp_die('Items Proccess (or they would be if we had items to delete)!');
         }
 
+	    // BULK VERSION
+
+	    //Detect when a bulk action is being triggered...
+	    if( 'bulk-delete'===$this->current_action() ) {
+
+		    $delete_ids = esc_sql( $_POST['bulk-list'] );
+
+		    // loop over the array of record IDs and delete them
+		    foreach ( $delete_ids as $id ) {
+			    $this->delete_zip( $id );
+
+		    }
+
+		    wp_redirect( esc_url( add_query_arg() ) );
+		    exit;
+	    }
+
+	    //Detect when a bulk action is being triggered...
+	    if( 'bulk-proccess'===$this->current_action() ) {
+		    wp_die('bulk Items Proccess (or they would be if we had items to delete)!');
+	    }
+
+
     }
+
+	public function delete_zip( $id ) {
+		unlink($this->zipFolder.'/'.$this->zipFiles[$id]['title']);
+	}
 }
