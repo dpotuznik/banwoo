@@ -6,6 +6,7 @@ $vendorDir = dirname(dirname(__FILE__));
 $baseDir = dirname($vendorDir);
 
 return array(
+    'League\\Csv\\' => array($vendorDir . '/league/csv/src'),
     'Comodojo\\Zip\\' => array($vendorDir . '/comodojo/zip/src'),
     'Comodojo\\Exception\\' => array($vendorDir . '/comodojo/exceptions/src/Exception'),
     'Automattic\\WooCommerce\\' => array($vendorDir . '/automattic/woocommerce/src/WooCommerce'),

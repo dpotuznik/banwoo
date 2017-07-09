@@ -7,6 +7,10 @@ namespace Composer\Autoload;
 class ComposerStaticInit2d0a4b07df1a4d59ea639e7758dff52e
 {
     public static $prefixLengthsPsr4 = array (
+        'L' => 
+        array (
+            'League\\Csv\\' => 11,
+        ),
         'C' => 
         array (
             'Comodojo\\Zip\\' => 13,
@@ -19,6 +23,10 @@ class ComposerStaticInit2d0a4b07df1a4d59ea639e7758dff52e
     );
 
     public static $prefixDirsPsr4 = array (
+        'League\\Csv\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/league/csv/src',
+        ),
         'Comodojo\\Zip\\' => 
         array (
             0 => __DIR__ . '/..' . '/comodojo/zip/src',
