@@ -113,6 +113,7 @@ class Banwoo {
 		 */
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/class-banwoo-admin.php';
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/class-banwoo-admin-menu.php';
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/class-banwoo-list-table-zip.php';
 
 		/**
 		 * The class responsible for defining all actions that occur in the public-facing
@@ -163,11 +164,11 @@ class Banwoo {
 		$this->loader->add_action( 'woocommerce_process_product_meta',$plugin_admin, 'woo_add_custom_general_fields_save'  );
 		$this->loader->add_action( 'admin_menu',$plugin_admin_menu, 'add_banggood_admin_menu'  );
 
-		// send form
+		// upload zip file
 		$this->loader->add_action( 'admin_post_banwoo_save_file',$plugin_admin_menu, 'process_banwoo_save_file'  );
 
 
-		
+
 
 	}
 
