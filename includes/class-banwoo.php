@@ -112,6 +112,7 @@ class Banwoo {
 		 * The class responsible for defining all actions that occur in the admin area.
 		 */
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/class-banwoo-admin.php';
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/class-banwoo-admin-menu.php';
 
 		/**
 		 * The class responsible for defining all actions that occur in the public-facing
@@ -150,6 +151,7 @@ class Banwoo {
 	private function define_admin_hooks() {
 
 		$plugin_admin = new Banwoo_Admin( $this->get_plugin_name(), $this->get_version() );
+		$plugin_admin_menu = new Banwoo_Admin_Menu( $this->get_plugin_name(), $this->get_version() );
 
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_styles' );
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts' );
@@ -159,6 +161,7 @@ class Banwoo {
 		$this->loader->add_action( 'woocommerce_product_data_panels',$plugin_admin, 'add_my_custom_product_data_fields'  );
 		// Save Product banggood Custom Field
 		$this->loader->add_action( 'woocommerce_process_product_meta',$plugin_admin, 'woo_add_custom_general_fields_save'  );
+		$this->loader->add_action( 'admin_menu',$plugin_admin_menu, 'add_banggood_admin_menu'  );
 	}
 
 	/**
