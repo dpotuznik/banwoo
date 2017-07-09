@@ -90,21 +90,23 @@ class Banwoo_list_zip extends WP_List_Table {
 	private $zipFolder;
 	private $zipFiles;
 
-	public function get_list_zip_files() {
-		$arr = array();
-		$directory =  $this->zipFolder;
-		$files = array_diff(scandir($directory), array('..', '.'));
-		$id = 1;
-		foreach ($files as $file){
-			$arr[$id]=array(
-				'ID'        => $id,
-				'title'     => $file ,
-				'nbr_product'    => ''
-			);
-			$id++;
-		}
-		return $arr;
-	}
+    /** ************************************************************************
+     * REQUIRED. Set up a constructor that references the parent constructor. We
+     * use the parent reference to set some default configs.
+     ***************************************************************************/
+    function __construct(){
+        global $status, $page;
+
+        //Set parent defaults
+        parent::__construct( array(
+            'singular'  => 'zip',     //singular name of the listed records
+            'plural'    => 'zip',    //plural name of the listed records
+            'ajax'      => false        //does this table support ajax?
+        ) );
+
+	    $this->zipFolder =  plugin_dir_path( __FILE__ ) .'../banggood_zip';
+	    $this->zipFiles = $this->get_list_zip_files();
+    }
 
 /*
     var $listZipFiles = array(
@@ -159,24 +161,21 @@ class Banwoo_list_zip extends WP_List_Table {
         );
 */
 
-    /** ************************************************************************
-     * REQUIRED. Set up a constructor that references the parent constructor. We
-     * use the parent reference to set some default configs.
-     ***************************************************************************/
-    function __construct(){
-        global $status, $page;
-
-        //Set parent defaults
-        parent::__construct( array(
-            'singular'  => 'zip',     //singular name of the listed records
-            'plural'    => 'zip',    //plural name of the listed records
-            'ajax'      => false        //does this table support ajax?
-        ) );
-
-	    $this->zipFolder =  plugin_dir_path( __FILE__ ) .'../banggood_zip';
-	    $this->zipFiles = $this->get_list_zip_files();
-    }
-
+	public function get_list_zip_files() {
+		$arr = array();
+		$directory =  $this->zipFolder;
+		$files = array_diff(scandir($directory), array('..', '.'));
+		$id = 1;
+		foreach ($files as $file){
+			$arr[$id]=array(
+				'ID'        => $id,
+				'title'     => $file ,
+				'nbr_product'    => ''
+			);
+			$id++;
+		}
+		return $arr;
+	}
 
     /** ************************************************************************
      * Recommended. This method is called when the parent class can't find a method
