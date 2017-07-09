@@ -162,6 +162,13 @@ class Banwoo {
 		// Save Product banggood Custom Field
 		$this->loader->add_action( 'woocommerce_process_product_meta',$plugin_admin, 'woo_add_custom_general_fields_save'  );
 		$this->loader->add_action( 'admin_menu',$plugin_admin_menu, 'add_banggood_admin_menu'  );
+
+		// send form
+		$this->loader->add_action( 'admin_post_banwoo_save_file',$plugin_admin_menu, 'process_banwoo_save_file'  );
+
+
+		
+
 	}
 
 	/**

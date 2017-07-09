@@ -57,15 +57,52 @@ class Banwoo_Admin_Menu {
 	//add_action( 'admin_menu', 'my_admin_menu' );
 
 	public function add_banggood_admin_menu() {
-		add_menu_page( 'Bangood Import Product', 'Bangood Import', 'manage_options', __FILE__ , array($this, 'banggood_admin_page'), 'dashicons-tickets', 6  );
+		add_menu_page( 'Bangood Import Product', 'Bangood Import', 'manage_options', 'banwoo' , array($this, 'banggood_admin_page'), 'dashicons-tickets', 6  );
 	}
 
 
 	public function banggood_admin_page(){
-		?>
-		<div class="wrap">
-			<h2>Welcome To My Plugin</h2>
-		</div>
-		<?php
+		// Show file
+		require_once plugin_dir_path( __FILE__ ) . '/partials/banwoo-admin-display.php';
 	}
+
+
+	/*
+	 * Va sauver les zip fournis par bangood pour crrer les produit
+	 */
+
+
+	public function process_banwoo_save_file(){
+		if ( !current_user_can( 'manage_options' ) )
+		{
+			wp_die( 'You are not allowed to be on this page.' );
+		}
+		// Check that nonce field
+		check_admin_referer( 'banwoo_verify' );
+
+
+		$uploaddir = plugin_dir_path( __FILE__ ) .'../banggood_zip/';
+		$uploadfile = $uploaddir . basename($_FILES['userfile']['name']);
+
+
+		if (move_uploaded_file($_FILES['userfile']['tmp_name'], $uploadfile)) {
+			$status=1;
+		} else {
+			$status=0;
+		}
+
+		/*
+		echo '<pre>';
+		echo 'Voici quelques informations de débogage :';
+		print_r($_FILES);
+
+		echo '</pre>';
+		*/
+
+
+		wp_redirect(  admin_url( 'admin.php?page=banwoo&m='.$status ) );
+		exit;
+	}
+
+
 }
