@@ -33,6 +33,12 @@ License: GPL2
  * ========================================================================== */
 
 
+require plugin_dir_path( __FILE__ ) . '../vendor/autoload.php';
+
+use Automattic\WooCommerce\Client;
+use Automattic\WooCommerce\HttpClient\HttpClientException;
+use League\Csv\Reader;
+
 
 /*************************** LOAD THE BASE CLASS *******************************
  *******************************************************************************
@@ -88,7 +94,10 @@ class Banwoo_list_zip extends WP_List_Table {
      * @var array
      **************************************************************************/
 	private $zipFolder;
+	private $proccessFolder;
 	private $zipFiles;
+	private $proccessFiles;
+	private $woocommerce;
 
     /** ************************************************************************
      * REQUIRED. Set up a constructor that references the parent constructor. We
@@ -105,61 +114,25 @@ class Banwoo_list_zip extends WP_List_Table {
         ) );
 
 	    $this->zipFolder =  plugin_dir_path( __FILE__ ) .'../banggood_zip';
+	    $this->proccessFolder =  plugin_dir_path( __FILE__ ) .'../banggood_proccess';
 	    $this->zipFiles = $this->get_list_zip_files();
+	    $this->proccessFiles = $this->get_list_proccess_files();
+
+	    $this->woocommerce = new Client(
+		    'https://beygoo.com',
+		    'ck_90f67edaf907294c6393deaa7e0c3cdf1c836bf7',
+		    'cs_cc41467c16713ce01b5b2d4d396c53ecbc6038a2',
+		    [
+			    'wp_api' => true,
+			    'version' => 'wc/v2',
+			    'query_string_auth' => true,
+			    'verify_ssl' => false
+		    ]
+	    );
+
+
     }
 
-/*
-    var $listZipFiles = array(
-            array(
-                'ID'        => 1,
-                'title'     => '300',
-                'nbr_product'    => 'R',
-                'director'  => 'Zach Snyder'
-            ),
-            array(
-                'ID'        => 2,
-                'title'     => 'Eyes Wide Shut',
-                'nbr_product'    => 'R',
-                'director'  => 'Stanley Kubrick'
-            ),
-            array(
-                'ID'        => 3,
-                'title'     => 'Moulin Rouge!',
-                'nbr_product'    => 'PG-13',
-                'director'  => 'Baz Luhrman'
-            ),
-            array(
-                'ID'        => 4,
-                'title'     => 'Snow White',
-                'nbr_product'    => 'G',
-                'director'  => 'Walt Disney'
-            ),
-            array(
-                'ID'        => 5,
-                'title'     => 'Super 8',
-                'nbr_product'    => 'PG-13',
-                'director'  => 'JJ Abrams'
-            ),
-            array(
-                'ID'        => 6,
-                'title'     => 'The Fountain',
-                'nbr_product'    => 'PG-13',
-                'director'  => 'Darren Aronofsky'
-            ),
-            array(
-                'ID'        => 7,
-                'title'     => 'Watchmen',
-                'nbr_product'    => 'R',
-                'director'  => 'Zach Snyder'
-            ),
-            array(
-                'ID'        => 8,
-                'title'     => '2001',
-                'nbr_product'    => 'G',
-                'director'  => 'Stanley Kubrick'
-            ),
-        );
-*/
 
 	public function get_list_zip_files() {
 		$arr = array();
@@ -170,9 +143,36 @@ class Banwoo_list_zip extends WP_List_Table {
 			$arr[$id]=array(
 				'ID'        => $id,
 				'title'     => $file ,
-				'nbr_product'    => ''
+				'csv_image'    => ''
 			);
 			$id++;
+		}
+		return $arr;
+	}
+
+
+	public function get_list_proccess_files() {
+		$arr = array();
+		$list =array();
+		$directory =  $this->proccessFolder;
+		$files = array_diff(scandir($directory), array('..', '.'));
+
+		foreach ($files as $file){
+			$src = str_replace('_product_image.csv','',$file);
+			$src = str_replace('_product_info.csv','',$src);
+			$list[$src]=1;
+		}
+
+		$id = 1;
+		foreach ($list as $k => $tmp){
+			if (file_exists($directory.'/'.$k.'_product_image.csv') && file_exists($directory.'/'.$k.'_product_info.csv')) {
+				$arr[ $id ] = array(
+					'ID'          => $id,
+					'title'       => $k.'_product_info.csv',
+					'csv_image' => $k.'_product_image.csv'
+				);
+				$id ++;
+			}
 		}
 		return $arr;
 	}
@@ -200,7 +200,7 @@ class Banwoo_list_zip extends WP_List_Table {
      **************************************************************************/
     function column_default($item, $column_name){
         switch($column_name){
-            case 'nbr_product':
+            case 'csv_image':
                 return $item[$column_name];
             default:
                 return print_r($item,true); //Show the whole array for troubleshooting purposes
@@ -345,7 +345,7 @@ class Banwoo_list_zip extends WP_List_Table {
          * use sort and pagination data to build a custom query instead, as you'll
          * be able to use your precisely-queried data immediately.
          */
-        $data = $this->zipFiles;
+        $data = $this->proccessFiles;
 
 
         /**
@@ -437,8 +437,8 @@ class Banwoo_list_zip extends WP_List_Table {
     function get_columns(){
         $columns = array(
             'cb'        => '<input type="checkbox" />', //Render a checkbox instead of text
-            'title'     => 'Zip File',
-            'nbr_product'    => 'Nombre de produit'
+            'title'     => 'Product Info File',
+            'csv_image'    => 'Product Image File'
         );
         return $columns;
     }
@@ -460,7 +460,7 @@ class Banwoo_list_zip extends WP_List_Table {
     function get_sortable_columns() {
         $sortable_columns = array(
             'title'     => array('title',false),     //true means it's already sorted
-            'nbr_product'    => array('nbr_product',false)
+            'csv_image'    => array('csv_image',false)
         );
         return $sortable_columns;
     }
@@ -485,7 +485,7 @@ class Banwoo_list_zip extends WP_List_Table {
 	        else {
 		        $this->delete_zip( absint( $_GET['id'] ) );
 		       // wp_die('Items deleted (or they would be if we had items to delete)!');
-		        wp_redirect( esc_url( add_query_arg() ) );
+		        wp_redirect(  admin_url( 'admin.php?page=banwoo&m=deleleok' ) );
 		        exit;
 	        }
 
@@ -494,7 +494,7 @@ class Banwoo_list_zip extends WP_List_Table {
 
         //Detect when a bulk action is being triggered...
         if( 'proccess'===$this->current_action() ) {
-            wp_die('Items Proccess (or they would be if we had items to delete)!');
+	        wp_redirect(  admin_url( 'admin.php?page=banwoo&sub=proccess&id='.absint( $_GET['id'] )) );
         }
 
 	    // BULK VERSION
@@ -510,19 +510,205 @@ class Banwoo_list_zip extends WP_List_Table {
 
 		    }
 
-		    wp_redirect( esc_url( add_query_arg() ) );
+		    wp_redirect(  admin_url( 'admin.php?page=banwoo&m=bdeleleok' ) );
 		    exit;
 	    }
 
 	    //Detect when a bulk action is being triggered...
 	    if( 'bulk-proccess'===$this->current_action() ) {
-		    wp_die('bulk Items Proccess (or they would be if we had items to delete)!');
+		    wp_redirect(  admin_url( 'admin.php?page=banwoo&sub=proccess' ) );
+		    exit;
 	    }
 
 
     }
 
+	public function process_banwoo_save_file(){
+		if ( !current_user_can( 'manage_options' ) )
+		{
+			wp_die( 'You are not allowed to be on this page.' );
+		}
+		// Check that nonce field
+		check_admin_referer( 'banwoo_verify' );
+
+
+		$uploaddir = plugin_dir_path( __FILE__ ) .'../banggood_zip/';
+		$uploadfile = $uploaddir . basename($_FILES['userfile']['name']);
+
+
+		if (move_uploaded_file($_FILES['userfile']['tmp_name'], $uploadfile)) {
+
+			$zip = \Comodojo\Zip\Zip::open($uploadfile);
+			$zip->extract($this->proccessFolder);
+			$this->proccessFiles = $this->get_list_proccess_files();
+			unlink($uploadfile);
+			$status=1;
+		} else {
+			$status=0;
+		}
+
+
+		wp_redirect(  admin_url( 'admin.php?page=banwoo&m='.$status ) );
+		exit;
+	}
+
 	public function delete_zip( $id ) {
-		unlink($this->zipFolder.'/'.$this->zipFiles[$id]['title']);
+		unlink($this->proccessFolder.'/'.$this->proccessFiles[$id]['title']);
+		unlink($this->proccessFolder.'/'.$this->proccessFiles[$id]['csv_image']);
+	}
+
+
+	public function dislpay_insert_form( $id  ) {
+
+		$input_product_csv = Reader::createFromPath($this->proccessFolder.'/'.$this->proccessFiles[$id]['title']);
+		$input_image_csv = Reader::createFromPath($this->proccessFolder.'/'.$this->proccessFiles[$id]['csv_image']);
+
+		//get at maximum 25 rows starting from the 801st row
+		$res = $input_product_csv->setOffset(1)->setLimit(25)->fetch();
+		$imageList = $input_image_csv->setOffset(1)->setLimit(100)->fetch();
+		$image_list_array = array();
+		foreach ($imageList as $image){
+			if (! is_array($image_list_array[ $image[0] ])) $image_list_array[ $image[0] ] = array();
+			array_push($image_list_array[ $image[0] ], $image[1]);
+		}
+
+		?>
+	<form action="<?php echo admin_url( 'admin-post.php' ); ?>" method="post">
+		<input type="hidden" name="action" value="banwoo_import_file" />
+		<?php wp_nonce_field( 'banwoo_verify' ); ?>
+
+		<table class="wp-list-table widefat fixed posts">
+			<thead>
+			<tr>
+				<th width="3%"></th>
+				<th width="7%"><?php _e('id', 'pippinw'); ?></th>
+				<th width="70%"><?php _e('title', 'pippinw'); ?></th>
+				<th width="70%"><?php _e('slug', 'pippinw'); ?></th>
+				<th width="20%"><?php _e('price', 'pippinw'); ?></th>
+			</tr>
+			</thead>
+			<tbody>
+			<?php
+			$data_array = $res;
+			if( !empty( $data_array ) ) :
+
+				foreach( $data_array as $row ) : ?>
+					<tr>
+						<td width="40%"><input type="checkbox" name="beygoo[import][]; ?>]" value="<?php echo $row[0]; ?>"></td>
+						<td width="10%"><?php echo $row[0]; ?>
+
+						<input type="hidden" name="beygoo[weight][<?php echo $row[0]; ?>]"  value="<?php echo sanitize_text_field($row[5]); ?>">
+						<input type="hidden" name="beygoo[desc][<?php echo $row[0]; ?>]"  value="<?php echo esc_textarea($row[6]); ?>">
+						<input type="hidden" name="beygoo[id][<?php echo $row[0]; ?>]"   value="<?php echo sanitize_text_field($row[0]); ?>">
+						<input type="hidden" name="beygoo[url][<?php echo $row[0]; ?>]"  value="<?php echo esc_js($row[7]); ?>">
+						<?php
+							// import image
+						foreach ($image_list_array[ $row[0] ] as $image) { ?>
+							<input type="hidden" name="beygoo[images][<?php echo $row[0]; ?>][]"  value="<?php echo sanitize_text_field($image); ?>">
+						<?php }
+								?>
+						<input type="hidden" name="beygoo[house][<?php echo $row[0]; ?>]"  value="<?php echo $row[8]; ?>"></td>
+						<td width="40%"><input type="text" name="beygoo[title][<?php echo $row[0]; ?>]"  style="width:100%" value="<?php echo sanitize_text_field($row[1]); ?>"></td>
+						<td width="40%"><input type="text" name="beygoo[slug][<?php echo $row[0]; ?>]"  style="width:100%" value="<?php echo sanitize_title_with_dashes($row[1]); ?>"></td>
+						<td width="10%"><input type="text" name="beygoo[price][<?php echo $row[0]; ?>]"  class="" value="<?php echo sanitize_text_field($row[4]); ?>"></td>
+					</tr>
+					<?php
+				endforeach;
+			else : ?>
+				<tr>
+					<td colspan="3"><?php _e('No data found', 'pippinw'); ?></td>
+				</tr>
+				<?php
+			endif;
+			?>
+			</tbody>
+		</table>
+		<p class="submit"><input type="submit" name="submit" id="submit" class="button button-primary" value="Import"></p>
+		</form>
+
+<?php
+	}
+
+
+	public function import_banwoo_into_woocommerce() {
+
+		if ( !current_user_can( 'manage_options' ) )
+		{
+			wp_die( 'You are not allowed to be on this page.' );
+		}
+		// Check that nonce field
+		check_admin_referer( 'banwoo_verify' );
+
+
+		$beygoo = $_POST['beygoo'];
+
+		// si il n'y a rien a importer on sort
+		if (!isset($beygoo['import'])) return true;
+
+
+		foreach ($beygoo['import'] as $product_id) {
+
+			$images = array();
+			$pos_image = 0;
+
+			foreach ( $beygoo['images'][$product_id] as $image){
+
+				array_push($images,array('src'=>$image,'position'=>$pos_image ));
+				$pos_image++;
+
+			}
+
+			$data = [
+				'name'              => $beygoo['title'][$product_id],
+				'slug'              => $beygoo['slug'][$product_id],
+				'sku'               => $beygoo['id'][$product_id],
+				'type'              => 'simple',
+				'regular_price'     => $beygoo['price'][$product_id],
+				'description'       => $beygoo['desc'][$product_id],
+				'short_description' => '',
+				'categories'        => [
+					[
+						'id' => 9
+					],
+					[
+						'id' => 14
+					]
+				],
+				'images'            => $images,
+				'meta_data'         => [
+					[
+						'key'   => 'banwoo_url',
+						'value' => $beygoo['url'][$product_id]
+					]
+				]
+			];
+		echo '<pre>';
+//		var_dump($data);
+			try{
+
+				print_r($this->woocommerce->post('products', $data));
+
+			}catch(HttpClientException $e){
+				echo 'le produit '.$beygoo['id'][$product_id].' existe déjà<br>';
+
+//				print_r($e);
+
+				print_r($e->getMessage() . PHP_EOL);
+
+				print_r('Code: ' . $e->getResponse()->getCode() . PHP_EOL);
+
+//				print_r('Body: ' . $e->getResponse()->getBody() . PHP_EOL);
+
+			}
+
+			echo '</pre>';
+
+
+		}
+
+		wp_die('end');
+
+
+
 	}
 }

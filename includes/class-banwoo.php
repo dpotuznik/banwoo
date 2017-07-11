@@ -153,6 +153,7 @@ class Banwoo {
 
 		$plugin_admin = new Banwoo_Admin( $this->get_plugin_name(), $this->get_version() );
 		$plugin_admin_menu = new Banwoo_Admin_Menu( $this->get_plugin_name(), $this->get_version() );
+		$banwooListZip = new Banwoo_list_zip();
 
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_styles' );
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts' );
@@ -164,8 +165,10 @@ class Banwoo {
 		$this->loader->add_action( 'woocommerce_process_product_meta',$plugin_admin, 'woo_add_custom_general_fields_save'  );
 		$this->loader->add_action( 'admin_menu',$plugin_admin_menu, 'add_banggood_admin_menu'  );
 
-		// upload zip file
-		$this->loader->add_action( 'admin_post_banwoo_save_file',$plugin_admin_menu, 'process_banwoo_save_file'  );
+		// POST upload zip file
+		$this->loader->add_action( 'admin_post_banwoo_save_file',$banwooListZip, 'process_banwoo_save_file'  );
+		// POST import file
+		$this->loader->add_action( 'admin_post_banwoo_import_file',$banwooListZip, 'import_banwoo_into_woocommerce'  );
 
 
 
