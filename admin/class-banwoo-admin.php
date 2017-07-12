@@ -134,6 +134,16 @@ class Banwoo_Admin {
 						'description' => __( 'Enter the Banggood product url here.', 'woocommerce' )
 					)
 				);
+				woocommerce_wp_text_input(
+					array(
+						'id'          => 'banwoo_warehouse',
+						'label'       => __( 'Banggood Warehouse', 'woocommerce' ),
+						'placeholder' => 'EU',
+						'desc_tip'    => 'true',
+						'description' => __( 'Enter the Banggood Warehouse here.', 'woocommerce' )
+					)
+				);
+
 				?>
 			</div>
 			<?php

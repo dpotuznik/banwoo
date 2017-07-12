@@ -112,6 +112,7 @@ class Banwoo {
 		 * The class responsible for defining all actions that occur in the admin area.
 		 */
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/class-banwoo-admin.php';
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/class-banwoo-option-page.php';
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/class-banwoo-admin-menu.php';
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/class-banwoo-list-table-zip.php';
 
@@ -154,6 +155,7 @@ class Banwoo {
 		$plugin_admin = new Banwoo_Admin( $this->get_plugin_name(), $this->get_version() );
 		$plugin_admin_menu = new Banwoo_Admin_Menu( $this->get_plugin_name(), $this->get_version() );
 		$banwooListZip = new Banwoo_list_zip();
+		$banwoo_option_page = new Banwoo_Option_Page($this->get_plugin_name(), $this->get_version());
 
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_styles' );
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts' );
@@ -170,6 +172,8 @@ class Banwoo {
 		// POST import file
 		$this->loader->add_action( 'admin_post_banwoo_import_file',$banwooListZip, 'import_banwoo_into_woocommerce'  );
 
+		$this->loader->add_action( 'admin_menu',$banwoo_option_page, 'banwoo_add_admin_menu'  );
+		$this->loader->add_action( 'admin_init',$banwoo_option_page, 'banwoo_settings_init'  );
 
 
 

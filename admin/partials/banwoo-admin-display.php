@@ -20,7 +20,7 @@ if ( isset( $_GET['m'] ) )
 		<div id='message' class='updated fade'><p><strong>Le fichier à bien été reçus.</strong>
 			</p></div>
 		<?php
-	}else if ($_GET['m'] == 0) {
+	}else if ($_GET['m'] === 0) {
 			?>
 			<div id='message' class='fail fade'><p><strong>Le fichier n'a pas été envoyer.</strong>
 				</p></div>
@@ -28,13 +28,19 @@ if ( isset( $_GET['m'] ) )
 
 	}else if ($_GET['m'] == 'deleteok') {
 	?>
-	<div id='message' class='fail fade'><p><strong>Le fichier à été effacer.</strong>
+	<div id='message' class='updated fade'><p><strong>Le fichier à été effacer.</strong>
 		</p></div>
 	<?php
 
 	}else if ($_GET['m'] == 'bdeleleok') {
 		?>
-		<div id='message' class='fail fade'><p><strong>Les fichier séléctionner ont été effacer.</strong>
+		<div id='message' class='updated fade'><p><strong>Les fichier séléctionner ont été effacer.</strong>
+			</p></div>
+		<?php
+
+	}else if ($_GET['m'] == 'insertok') {
+		?>
+		<div id='message' class='updated fade'><p><strong>Le(s) produit séléctionner ont bien été inserer.</strong>
 			</p></div>
 		<?php
 
